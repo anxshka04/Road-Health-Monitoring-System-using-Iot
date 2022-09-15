@@ -1,0 +1,46 @@
+#define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID "Template-ID"
+#define BLYNK_DEVICE_NAME "Hackathon Smart Application"
+#define BLYNK_AUTH_TOKEN "Auth-Token"
+
+#include <SPI.h>
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Simpletimer.h>
+#include <DHT.h>
+
+char ssid[] = "Username";
+char pass[] = "Password";
+
+DHT dht(2, DHT11); //The DHT module selected is DHT11, and it is connected at D4.
+SimpleTimer timer;
+
+void sendSensor()
+{
+  float h = dht.readHumidity(); //Read the humidity.
+  float t = dht.readTemperature(); //Read the temperature.
+  int forcePin = A0;
+  int force;
+  int ir = 0;
+  force = analogRead(forcePin); //Read the force.
+  ir = digitalRead(5); //Read the IR signal at D1.
+  Blynk.virtualWrite(V3, force); //Send the force value to Virtual Pin 3 on Blynk.
+  Blynk.virtualWrite(V4, ir); //Send the IR value to Virtual Pin 4 on Blynk.
+  Blynk.virtualWrite(V5, h); //Send the humidity value to Virtual Pin 5 on Blynk.
+  Blynk.virtualWrite(V6, t); //Send the temperature value to Virtual Pin 6 on Blynk.
+}
+
+void setup()
+{
+  Serial.begin(9600);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  pinMode(14, HIGH);
+  dht.begin();
+  timer.setInterval(1000L, sendSensor);
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
